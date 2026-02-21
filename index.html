@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CollabPad — Real-Time Collaborative Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- JOIN MODAL -->
+    <div class="modal-overlay" id="joinModal">
+      <div class="modal">
+        <h2>CollabPad</h2>
+        <p>
+          Real-time collaborative coding & note-taking. Open in multiple tabs to
+          see live collaboration.
+        </p>
+        <label>Your Name</label>
+        <input
+          type="text"
+          id="userNameInput"
+          placeholder="e.g. Alice"
+          maxlength="20"
+        />
+        <label>Pick your color</label>
+        <div class="color-picks" id="colorPicks"></div>
+        <button
+          class="btn btn-primary"
+          style="width: 100%; justify-content: center; padding: 12px"
+          onclick="joinSession()"
+        >
+          Join Session →
+        </button>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <!-- HEADER -->
+    <header>
+      <div class="logo">CollabPad</div>
+      <div class="doc-title-wrap">
+        <input type="text" id="docTitle" value="Untitled Document" />
+        <div class="save-status">
+          <div class="save-dot"></div>
+          <span id="saveStatusText">saved</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="users-bar" id="usersBar"></div>
+        <span class="online-count" id="onlineCount">1 online</span>
+        <button class="btn" onclick="shareDoc()">🔗 Share</button>
+        <button class="btn btn-primary" onclick="newDocument()">+ New</button>
+      </div>
+    </header>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <button class="tool-btn" onclick="insertText('  ')" title="Indent">
+        ⇥ Tab
+      </button>
+      <button class="tool-btn" id="wrapBtn" onclick="toggleWrap()">
+        ↩ Wrap
+      </button>
+      <div class="toolbar-sep"></div>
+      <button class="tool-btn" onclick="insertSnippet('function')">fn</button>
+      <button class="tool-btn" onclick="insertSnippet('arrow')">() =></button>
+      <button class="tool-btn" onclick="insertSnippet('class')">class</button>
+      <button class="tool-btn" onclick="insertSnippet('async')">async</button>
+      <button class="tool-btn" onclick="insertSnippet('try')">try/catch</button>
+      <div class="toolbar-sep"></div>
+      <button
+        class="tool-btn"
+        onclick="insertSnippet('header1')"
+        title="Heading 1"
+      >
+        # H1
+      </button>
+      <button class="tool-btn" onclick="insertSnippet('bold')" title="Bold">
+        **B**
+      </button>
+      <button class="tool-btn" onclick="insertSnippet('italic')" title="Italic">
+        _I_
+      </button>
+      <button
+        class="tool-btn"
+        onclick="insertSnippet('code')"
+        title="Inline code"
+      >
+        `code`
+      </button>
+      <button class="tool-btn" onclick="insertSnippet('link')" title="Link">
+        [link]
+      </button>
+      <div class="toolbar-sep"></div>
+      <select class="lang-select" id="langSelect" onchange="changeLanguage()">
+        <option value="js">JavaScript</option>
+        <option value="py">Python</option>
+        <option value="ts">TypeScript</option>
+        <option value="html">HTML</option>
+        <option value="css">CSS</option>
+        <option value="json">JSON</option>
+        <option value="md">Markdown</option>
+        <option value="txt">Plain Text</option>
+      </select>
+      <div class="mode-toggle" style="margin-left: auto">
+        <button class="mode-btn active" id="modeCode" onclick="setMode('code')">
+          Code
+        </button>
+        <button class="mode-btn" id="modeNote" onclick="setMode('note')">
+          Notes
+        </button>
+      </div>
+      <button class="tool-btn" onclick="toggleSidebar()" title="Toggle sidebar">
+        ☰
+      </button>
+      <button
+        class="tool-btn"
+        onclick="toggleRightPanel()"
+        title="Toggle panel"
+      >
+        ⊞
+      </button>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+      <!-- SIDEBAR -->
+      <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">Documents</div>
+        <div class="docs-list" id="docsList"></div>
+        <button class="new-doc-btn" onclick="newDocument()">
+          + New Document
+        </button>
+        <!-- Share banner -->
+        <div class="share-banner">
+          <span>🔗</span>
+          <span class="share-link" id="shareLinkEl"
+            >Open another tab to collaborate</span
+          >
+          <button class="copy-link-btn" onclick="shareDoc()">Copy</button>
+        </div>
+      </div>
+
+      <!-- EDITOR -->
+      <div class="editor-area">
+        <div class="cursors-overlay" id="cursorsOverlay"></div>
+        <div class="editor-wrap">
+          <div class="line-numbers" id="lineNumbers">
+            <span>1</span>
+          </div>
+          <textarea
+            id="editor"
+            spellcheck="false"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="right-panel" id="rightPanel">
+        <div class="panel-tabs">
+          <button class="panel-tab active" onclick="switchTab('chat')">
+            Chat
+          </button>
+          <button class="panel-tab" onclick="switchTab('activity')">
+            Activity
+          </button>
+          <button class="panel-tab" onclick="switchTab('stats')">Stats</button>
+        </div>
+        <div class="panel-content">
+          <!-- CHAT -->
+          <div class="panel-section active" id="section-chat">
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="typing-indicator" id="typingIndicator"></div>
+            <div class="chat-input-wrap">
+              <textarea
+                id="chatInput"
+                rows="1"
+                placeholder="Message..."
+                onkeydown="handleChatKey(event)"
+              ></textarea>
+              <button class="send-btn" onclick="sendChat()">↑</button>
+            </div>
+          </div>
+
+          <!-- ACTIVITY -->
+          <div class="panel-section" id="section-activity">
+            <div class="activity-list" id="activityList"></div>
+          </div>
+
+          <!-- STATS -->
+          <div class="panel-section" id="section-stats">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Characters</div>
+                <div class="stat-value" id="statChars">0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Lines</div>
+                <div class="stat-value" id="statLines">1</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Words</div>
+                <div class="stat-value" id="statWords">0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Online</div>
+                <div class="stat-value" id="statOnline">1</div>
+              </div>
+              <div class="stat-card" style="grid-column: 1/-1">
+                <div class="stat-label">Total Edits (session)</div>
+                <div class="stat-value" id="statEdits">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATUSBAR -->
+    <div class="statusbar">
+      <div class="status-item">
+        <div
+          class="status-dot"
+          style="background: var(--success); animation: pulse 2s infinite"
+        ></div>
+        <span>Connected</span>
+      </div>
+      <div class="status-item" id="statusCursor">Ln 1, Col 1</div>
+      <div class="status-item" id="statusLang">JavaScript</div>
+      <div class="right">
+        <span id="statusMode">Code Mode</span>
+        <span id="statusEncoding">UTF-8</span>
+        <span>CollabPad v1.0</span>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
