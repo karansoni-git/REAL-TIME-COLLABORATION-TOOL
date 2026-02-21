@@ -46,3 +46,5 @@ The toolbar provides one-click snippet insertion, word wrap toggling, and a lang
 CollabPad is built entirely with **vanilla HTML, CSS, and JavaScript** — no frameworks, no servers, no dependencies. Real-time sync is handled by the **BroadcastChannel API**, with a clean message protocol supporting edits, cursor moves, chat, presence, and document management. The dark-themed UI uses JetBrains Mono and Syne typefaces for a refined, professional aesthetic.
 
 > **To collaborate:** Open the file in two or more browser tabs and start typing.
+
+OUTPUT : ![img](https://github.com/user-attachments/assets/a9544582-9454-4b7c-b9be-cdb8a85f7ef1)
